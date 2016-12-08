@@ -10,6 +10,7 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import <MBProgressHUD/MBProgressHUD.h>
 
+// 小米手环名称
 #define BAND_NAME       @"MI Band 2"
 
 #define SCREEN_WIDTH    [UIScreen mainScreen].bounds.size.width
@@ -40,7 +41,19 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    // 1. 初始化视图
+    [self initSubviews];
     
+    // 2. 创建蓝牙中心管理器
+    dispatch_queue_t queue = dispatch_queue_create("bluetooth", DISPATCH_QUEUE_SERIAL);
+    CBCentralManager *mgr = [[CBCentralManager alloc] initWithDelegate:self queue:queue];
+    self.mgr = mgr;
+}
+
+#pragma mark - 初始化视图
+- (void)initSubviews
+{
+    // 开始扫描按钮
     UIButton *startScan = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.view addSubview:startScan];
     startScan.frame = CGRectMake(30, 50, 80, 50);
@@ -48,6 +61,7 @@
     [startScan setTitle:@"重新扫描" forState:UIControlStateNormal];
     [startScan addTarget:self action:@selector(startScanClick) forControlEvents:UIControlEventTouchUpInside];
     
+    // 停止扫描按钮
     UIButton *stopScan = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.view addSubview:stopScan];
     stopScan.frame = CGRectMake(140, 50, 80, 50);
@@ -55,6 +69,7 @@
     [stopScan setTitle:@"停止扫描" forState:UIControlStateNormal];
     [stopScan addTarget:self action:@selector(stopScanClick) forControlEvents:UIControlEventTouchUpInside];
     
+    // 连接外设按钮
     UIButton *connectPeripheral = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.view addSubview:connectPeripheral];
     connectPeripheral.frame = CGRectMake(250, 50, 80, 50);
@@ -68,13 +83,9 @@
     tableView.delegate = self;
     tableView.dataSource = self;
     tableView.tableHeaderView = [self createHeaderView];
-    
-    // 创建蓝牙中心管理器
-    dispatch_queue_t queue = dispatch_queue_create("bluetooth", DISPATCH_QUEUE_SERIAL);
-    CBCentralManager *mgr = [[CBCentralManager alloc] initWithDelegate:self queue:queue];
-    self.mgr = mgr;
 }
 
+#pragma mark - 开始扫描按钮
 - (void)startScanClick
 {
     NSLog(@"%s", __FUNCTION__);
@@ -88,12 +99,14 @@
     [self.mgr scanForPeripheralsWithServices:nil options:nil];
 }
 
+#pragma mark - 停止扫描按钮
 - (void)stopScanClick
 {
     NSLog(@"%s", __FUNCTION__);
     [self.mgr stopScan];
 }
 
+#pragma mark - 连接外设按钮
 - (void)connectPeripheralClick
 {
     NSLog(@"%s", __FUNCTION__);
@@ -108,6 +121,7 @@
     });
 }
 
+#pragma mark - 创建headerView
 - (UILabel *)createHeaderView
 {
     UILabel *headerView = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 60)];
@@ -356,6 +370,8 @@
         NSArray *tmpChrs = [NSArray arrayWithArray:chrs];
         for (CBCharacteristic *chr in tmpChrs) {
             if ([chr.UUID.UUIDString isEqualToString:characteristic.UUID.UUIDString]) {
+                
+                // 替换characteristic
                 NSInteger index = [chrs indexOfObject:chr];
                 [chrs replaceObjectAtIndex:index withObject:characteristic];
                 
